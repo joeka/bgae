@@ -41,6 +41,9 @@ function game:update(dt)
 end
 
 function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
+	if shape_a == game.player.shape then
+		game.player:move( mtv_x, mtv_y )
+	end
 end
 
 function collision_stop( dt, shape_a, shape_b )
