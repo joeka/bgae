@@ -55,12 +55,13 @@ function shoot()
     local bullet = {}
     bullet.pos = Vector(game.player.pos.x, game.player.pos.y)
     bullet.dir = Vector(math.cos(game.player.rot-math.pi/2), math.sin(game.player.rot-math.pi/2))
+    bullet.velocity = 200
     table.insert(game.projectiles, bullet)
 end
 
 function updateBullets(dt)
     for i,v in ipairs(game.projectiles) do
-        v.pos = v.pos + v.dir*dt*100
+        v.pos = v.pos + v.dir*dt*v.velocity
     end
 end
 
