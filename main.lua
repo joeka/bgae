@@ -1,3 +1,5 @@
+HC = require "libs.HardonCollider"
+
 require "libs.strict"
 
 Vector = require "libs.hump.vector"
