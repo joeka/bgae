@@ -2,6 +2,7 @@ require "libs.strict"
 
 Vector = require "libs.hump.vector"
 Gamestate = require "libs.hump.gamestate"
+Camera = require "libs.hump.camera"
 
 states = {}
 
