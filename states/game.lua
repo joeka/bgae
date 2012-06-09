@@ -115,7 +115,6 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 		game.player:move( mtv_x, mtv_y )
 	end
 	if shape_a.bullet and shape_b ~= game.player.shape then
-		print( "bang" )
 		shape_a.bullet = false
 		game.collider:remove(shape_a)
 		-- kill someone maybe
@@ -127,7 +126,7 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 		print( "bang" )
 		shape_b.bullet = false
 		game.collider:remove(shape_b)
-		
+		-- kill someone maybe		
 		if shape_a.zombie then
 			shape_a.zombie = false
 			game.collider:remove(shape_a)
@@ -182,7 +181,7 @@ function shoot()
     bullet.pos = Vector(game.player.pos.x, game.player.pos.y)
     bullet.dir = Vector(math.cos(game.player.rot-math.pi/2), math.sin(game.player.rot-math.pi/2))
     bullet.velocity = 200
-	bullet.shape = game.collider:addPoint(bullet.pos.x, bullet.pos.y)
+	bullet.shape = game.collider:addRectangle(bullet.pos.x-3, bullet.pos.y-3,6,6)
 	bullet.shape.bullet = true
     table.insert(game.projectiles, bullet)
 end
