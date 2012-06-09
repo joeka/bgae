@@ -1,3 +1,8 @@
+TILED_LOADER_PATH = nil
+tileSetProperties = nil
+Animations_legacy_support = nil
+
+require "libs.AnAL"
 local game = Gamestate.new()
 
 game.player = { }
@@ -5,8 +10,7 @@ game.player = { }
 camMaxDist = 50
 
 game.objects = {}
-TILED_LOADER_PATH = nil
-tileSetProperties = nil
+
 game.loader = require("libs.AdvTiledLoader.Loader")
 game.loader.path = "maps/"
 game.map = game.loader.load("city.tmx")
@@ -17,13 +21,15 @@ function game:init()
 	game.player.pos = Vector ( 100, 100 )
 	game.player.rot = 0
 
-	game.player.image = love.graphics.newImage( "assets/graphics/dummy.png" )
-
-	game.camera = Camera( 100, 100, 2 )
+	game.player.image = love.graphics.newImage( "assets/graphics/animation.png" )
+    game.player.image:setFilter("nearest","nearest")
+	game.camera = Camera( 100, 100, 4 )
 
 	game.collider = HC( 100, on_collision, collision_stop )
-	game.player.shape = game.collider:addRectangle( game.player.pos.x, game.player.pos.y, 40, 15 )
+	game.player.shape = game.collider:addRectangle( game.player.pos.x, game.player.pos.y, 32, 32 )
+	game.player.anim = newAnimation(game.player.image, 32, 32, 0.1, 3)
 	game.objects.rect1 = game.collider:addRectangle( 50, 50, 20, 20 )
+	
 
 	game.projectiles = {}
 end
@@ -74,15 +80,18 @@ function movement(dt)
 	dir:normalize_inplace()
 	
 	if dir:len() > 0 then
+	    game.player.anim:update(dt) 
 		local rot = math.atan2(dir.x, -dir.y)
 		if rot ~= game.player.rot then
 			game.player.shape:rotate( rot - game.player.rot )
 			game.player.rot = rot
 		end
+	else
+	    game.player.anim:seek(3)
 	end
 
-	local newX = game.player.pos.x + dir.x * dt * 100
-	local newY = game.player.pos.y + dir.y * dt * 100
+	local newX = game.player.pos.x + dir.x * dt * 50
+	local newY = game.player.pos.y + dir.y * dt * 50
 	game.player:moveTo( newX, newY )
 end
 
@@ -130,7 +139,8 @@ function game:draw()
 	love.graphics.rectangle( "fill", 50, 50, 20, 20 )
 	
 	--game.player.shape:draw("fill")
-	love.graphics.draw( game.player.image, game.player.pos.x, game.player.pos.y, game.player.rot, 0.5,0.5, 25, 10 )
+	--love.graphics.draw( game.player.image, game.player.pos.x, game.player.pos.y, game.player.rot, 0.5,0.5, 16, 16 )
+	game.player.anim:draw(game.player.pos.x, game.player.pos.y, game.player.rot, 0.5,0.5, 16, 16 )
     drawBullets()
 	game.camera:detach()
 end
