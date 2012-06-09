@@ -65,6 +65,7 @@ function spawnTimer()
 end
 
 function game:init()
+    love.graphics.setPointSize(5)
     game.redScreen = 0
     game.blood = {}
     game.sfx.shoot = love.audio.newSource("assets/sfx/shoot.ogg", "static")
