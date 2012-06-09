@@ -7,7 +7,8 @@ local game = Gamestate.new()
 
 game.player = { }
 
-camMaxDist = 50
+local camMaxDist = 10
+local fancyOption = 3
 
 game.objects = {}
 
@@ -18,7 +19,7 @@ game.layer = game.map.tl["Ground"]
 
 
 function game:init()
-	game.player.pos = Vector ( 100, 100 )
+	game.player.pos = Vector ( 32*5, 32*5 )
 	game.player.rot = 0
 
 	game.player.image = love.graphics.newImage( "assets/graphics/animation.png" )
@@ -26,11 +27,40 @@ function game:init()
 	game.camera = Camera( 100, 100, 4 )
 
 	game.collider = HC( 100, on_collision, collision_stop )
-	game.player.shape = game.collider:addRectangle( game.player.pos.x, game.player.pos.y, 32, 32 )
+	game.collidable_tiles = game:findSolidTiles(game.map)
+	game.player.shape = game.collider:addRectangle( game.player.pos.x, game.player.pos.y, 5, 3 )
 	game.player.anim = newAnimation(game.player.image, 32, 32, 0.1, 3)
 	game.objects.rect1 = game.collider:addRectangle( 50, 50, 20, 20 )	
-
 	game.projectiles = {}
+end
+
+function game:findSolidTiles(map)
+
+    local collidable_tiles = {}
+    
+    local layer = map.tl["Buildings"]
+
+    for tileX=1,map.width do
+        for tileY=1,map.height do
+
+            local tileId
+
+            if layer.tileData(tileX,tileY) then
+                local ctile = game.collider:addRectangle((tileX)*32,(tileY)*32,32,32)
+                game.collider:setPassive(ctile)
+                table.insert(collidable_tiles, ctile)
+            end
+
+        end
+    end
+
+    return collidable_tiles
+end
+
+function drawCollidableTiles()
+    for i,v in ipairs(game.collidable_tiles) do
+        --v:draw("fill")
+    end
 end
 
 function game.player:moveTo(x, y)
@@ -143,8 +173,8 @@ function smoothFollow(dt)
 	if dist > camMaxDist then
 		local dir = Vector(game.player.pos.x - game.camera.x, game.player.pos.y - game.camera.y)
 		dir:normalize_inplace()
-		dir.x = dir.x * dt * dist
-		dir.y = dir.y * dt * dist
+		dir.x = dir.x * dt * dist * fancyOption
+		dir.y = dir.y * dt * dist * fancyOption
 		game.camera:move( dir.x, dir.y )
 	end
 end
@@ -154,10 +184,10 @@ function game:draw()
 	local ftx, fty = math.floor(game.player.pos.x), math.floor(game.player.pos.y)
 	game.map:draw()
 	love.graphics.rectangle( "fill", 50, 50, 20, 20 )
-	
+	drawCollidableTiles()
 	--game.player.shape:draw("fill")
 	--love.graphics.draw( game.player.image, game.player.pos.x, game.player.pos.y, game.player.rot, 0.5,0.5, 16, 16 )
-	game.player.anim:draw(game.player.pos.x, game.player.pos.y, game.player.rot, 0.5,0.5, 16, 16 )
+	game.player.anim:draw(game.player.pos.x, game.player.pos.y, game.player.rot, 0.5, 0.5, 16, 16 )
     drawBullets()
 	game.camera:detach()
 end
