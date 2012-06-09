@@ -14,6 +14,8 @@ local zombieImage = nil
 local camMaxDist = 10
 local fancyOption = 3
 
+local killCount = 0
+
 game.objects = {}
 
 game.loader = require("libs.AdvTiledLoader.Loader")
@@ -157,6 +159,7 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 		game.collider:remove(shape_a)
 		-- kill someone maybe
 		if shape_b.zombie then
+			killCount = killCount + 1
 			shape_b.zombie = false
 			game.collider:remove(shape_b)
 		end
@@ -166,6 +169,7 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 		game.collider:remove(shape_b)
 		-- kill someone maybe		
 		if shape_a.zombie then
+			killCount = killCount + 1
 			shape_a.zombie = false
 			game.collider:remove(shape_a)
 		end
@@ -294,6 +298,8 @@ end
 
 local function drawGUI()
 	love.graphics.setColor(255,255,255,200)
+	love.graphics.print( killCount, 100, 12 )
+
 	love.graphics.rectangle( "fill", 600, 10, 104, 14 )
 	love.graphics.setColor(255,0,0,200)
 	love.graphics.rectangle( "fill", 602, 12, game.player.hp, 10 )
