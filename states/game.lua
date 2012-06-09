@@ -54,6 +54,7 @@ local function spawnZombie()
 end
 
 function game:init()
+    game.redScreen = 0
     game.blood = {}
     game.sfx.shoot = love.audio.newSource("assets/sfx/shoot.ogg", "static")
 	
@@ -136,13 +137,22 @@ end
 function game:update(dt)
 	movement(dt)
 	smoothFollow(dt)
-
+    updateRedScreen(dt)
 	updateBullets(dt)
 	updateZombies(dt)
 	game.collider:update(dt)
 end
 
+function updateRedScreen(dt)
+    if game.redScreen>0 then
+        game.redScreen = game.redScreen - dt*70
+    else
+        game.redScreen = 0
+    end
+end
+
 function hit ( mtv_x, mtv_y )
+    game.redScreen = 255
 	local dir = Vector( mtv_x, mtv_y):normalize_inplace()
 	game.player:move( dir.x * 10, dir.y * 10 )
 
@@ -345,7 +355,8 @@ function game:draw()
 	love.graphics.draw(game.fg, x,y, 0,1,1,512,512)
 
 	love.graphics.setBlendMode("alpha")
-
+    love.graphics.setColor(255,0,0,game.redScreen)
+    love.graphics.rectangle("fill",0,0,love.graphics.getWidth(),love.graphics.getHeight())
 	drawGUI()
 end
 
