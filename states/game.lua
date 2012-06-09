@@ -23,6 +23,7 @@ function game:init()
 
 	game.collider = HC( 100, on_collision, collision_stop )
 	game.player.shape = game.collider:addRectangle( game.player.pos.x, game.player.pos.y, 40, 15 )
+
 	game.objects.rect1 = game.collider:addRectangle( 50, 50, 20, 20 )
 
 	game.projectiles = {}
@@ -50,6 +51,17 @@ end
 function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 	if shape_a == game.player.shape then
 		game.player:move( mtv_x, mtv_y )
+	end
+	if shape_a.bullet and shape_b ~= game.player.shape then
+		print( "bang" )
+		shape_a.bullet = false
+		game.collider:remove(shape_a)
+		-- kill someone maybe
+	elseif shape_b.bullet and shape_a ~= game.player.shape then
+		print( "bang" )
+		shape_b.bullet = false
+		game.collider:remove(shape_b)
+		-- kill someone maybe
 	end
 end
 
@@ -97,13 +109,20 @@ function shoot()
     bullet.pos = Vector(game.player.pos.x, game.player.pos.y)
     bullet.dir = Vector(math.cos(game.player.rot-math.pi/2), math.sin(game.player.rot-math.pi/2))
     bullet.velocity = 200
+	bullet.shape = game.collider:addPoint(bullet.pos.x, bullet.pos.y)
+	bullet.shape.bullet = true
     table.insert(game.projectiles, bullet)
 end
 
 function updateBullets(dt)
     for i,v in ipairs(game.projectiles) do
-        v.pos = v.pos + v.dir*dt*v.velocity
-    end
+		if v.shape.bullet then
+        	v.pos = v.pos + v.dir*dt*v.velocity
+			v.shape:moveTo(v.pos.x, v.pos.y)
+    	else
+			table.remove(game.projectiles, i)
+		end
+	end
 end
 
 function drawBullets()
