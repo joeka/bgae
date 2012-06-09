@@ -7,6 +7,9 @@ local game = Gamestate.new()
 
 game.player = { }
 
+game.zombies = {}
+local zombieImage = nil
+
 local camMaxDist = 10
 local fancyOption = 3
 
@@ -17,21 +20,45 @@ game.loader.path = "maps/"
 game.map = game.loader.load("city.tmx")
 game.layer = game.map.tl["Ground"]
 
+local function findSpawn()
+	return Vector( math.random( 32 * 32 ), math.random( 32*32 ) )
+
+end
+
+local function spawnZombie()
+	local zombie = {}
+
+	zombie.pos = findSpawn()
+	zombie.rot = 0
+
+	zombie.anim = newAnimation(zombieImage, 32, 32, 0.1, 3)	
+	zombie.shape = game.collider:addRectangle( zombie.pos.x, zombie.pos.y, 5, 3 )
+
+	zombie.shape.zombie = true
+
+	table.insert( game.zombies, zombie )
+end
 
 function game:init()
+
 	game.player.pos = Vector ( 32*5, 32*5 )
 	game.player.rot = 0
 
 	game.player.image = love.graphics.newImage( "assets/graphics/animation.png" )
-    game.player.image:setFilter("nearest","nearest")
+	zombieImage = love.graphics.newImage( "assets/graphics/zombie.png" )
+    
+	game.player.image:setFilter("nearest","nearest")
 	game.camera = Camera( 100, 100, 4 )
 
 	game.collider = HC( 100, on_collision, collision_stop )
 	game.collidable_tiles = game:findSolidTiles(game.map)
 	game.player.shape = game.collider:addRectangle( game.player.pos.x, game.player.pos.y, 5, 3 )
 	game.player.anim = newAnimation(game.player.image, 32, 32, 0.1, 3)
-	game.objects.rect1 = game.collider:addRectangle( 50, 50, 20, 20 )	
 	game.projectiles = {}
+
+	for i = 1 , 100 do
+		spawnZombie()
+	end
 end
 
 function game:findSolidTiles(map)
@@ -79,6 +106,7 @@ function game:update(dt)
 	smoothFollow(dt)
 
 	updateBullets(dt)
+	updateZombies(dt)
 	game.collider:update(dt)
 end
 
@@ -91,11 +119,19 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 		shape_a.bullet = false
 		game.collider:remove(shape_a)
 		-- kill someone maybe
+		if shape_b.zombie then
+			shape_b.zombie = false
+			game.collider:remove(shape_b)
+		end
 	elseif shape_b.bullet and shape_a ~= game.player.shape then
 		print( "bang" )
 		shape_b.bullet = false
 		game.collider:remove(shape_b)
-		-- kill someone maybe
+		
+		if shape_a.zombie then
+			shape_a.zombie = false
+			game.collider:remove(shape_a)
+		end
 	end
 end
 
@@ -151,6 +187,16 @@ function shoot()
     table.insert(game.projectiles, bullet)
 end
 
+function updateZombies(dt)
+	for i, zombie in ipairs(game.zombies) do
+		if zombie.shape.zombie then
+			--do stuff
+		else
+			table.remove(game.zombies, i)
+		end
+	end
+end
+
 function updateBullets(dt)
     for i,v in ipairs(game.projectiles) do
 		if v.shape.bullet then
@@ -168,6 +214,12 @@ function drawBullets()
     end
 end
 
+local function drawZombies()
+	for i,zombie in ipairs(game.zombies) do
+		zombie.anim:draw( zombie.pos.x, zombie.pos.y, zombie.rot, 0.5, 0.5, 16, 16)
+	end
+end
+
 function smoothFollow(dt)
 	local dist = game.player.pos:dist( Vector(game.camera.x, game.camera.y) )
 	if dist > camMaxDist then
@@ -183,12 +235,13 @@ function game:draw()
 	game.camera:attach()
 	local ftx, fty = math.floor(game.player.pos.x), math.floor(game.player.pos.y)
 	game.map:draw()
-	love.graphics.rectangle( "fill", 50, 50, 20, 20 )
 	drawCollidableTiles()
 	--game.player.shape:draw("fill")
 	--love.graphics.draw( game.player.image, game.player.pos.x, game.player.pos.y, game.player.rot, 0.5,0.5, 16, 16 )
 	game.player.anim:draw(game.player.pos.x, game.player.pos.y, game.player.rot, 0.5, 0.5, 16, 16 )
-    drawBullets()
+    
+	drawZombies()
+	drawBullets()
 	game.camera:detach()
 end
 
