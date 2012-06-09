@@ -30,11 +30,20 @@ local function spawnZombie()
 
 	zombie.pos = findSpawn()
 	zombie.rot = 0
-
+	zombie.velocity = 40
+    function zombie:move(x,y)
+        zombie.pos.x = zombie.pos.x+x
+    	zombie.pos.y = zombie.pos.y+y
+    	zombie.shape:move( x, y )
+    end
+    
+    function zombie:update(dt)
+        zombie:move(math.random(1)*dt,math.random(1)*dt)
+    end
 	zombie.anim = newAnimation(zombieImage, 32, 32, 0.1, 3)	
-	zombie.shape = game.collider:addRectangle( zombie.pos.x, zombie.pos.y, 5, 3 )
+	zombie.shape = game.collider:addRectangle( zombie.pos.x-2.5, zombie.pos.y-1.5, 5, 3 )
 
-	zombie.shape.zombie = true
+	zombie.shape.zombie = zombie
 
 	table.insert( game.zombies, zombie )
 end
@@ -46,7 +55,7 @@ function game:init()
     game.fg = love.graphics.newImage("assets/graphics/fg2.png")
 	game.player.image = love.graphics.newImage( "assets/graphics/animation.png" )
 	zombieImage = love.graphics.newImage( "assets/graphics/zombie.png" )
-    
+    zombieImage:setFilter("nearest", "nearest")
 	game.player.image:setFilter("nearest","nearest")
 	game.camera = Camera( 100, 100, 4 )
 
@@ -56,7 +65,7 @@ function game:init()
 	game.player.anim = newAnimation(game.player.image, 32, 32, 0.1, 3)
 	game.projectiles = {}
 
-	for i = 1 , 100 do
+	for i = 1 , 50 do
 		spawnZombie()
 	end
 end
@@ -114,7 +123,11 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 	if shape_a == game.player.shape then
 		game.player:move( mtv_x, mtv_y )
 	end
+	if shape_a.zombie then
+	    shape_a.zombie:move( mtv_x, mtv_y )
+    end
 	if shape_a.bullet and shape_b ~= game.player.shape then
+	    print( "bang1" )
 		shape_a.bullet = false
 		game.collider:remove(shape_a)
 		-- kill someone maybe
@@ -123,7 +136,7 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 			game.collider:remove(shape_b)
 		end
 	elseif shape_b.bullet and shape_a ~= game.player.shape then
-		print( "bang" )
+		print( "bang2" )
 		shape_b.bullet = false
 		game.collider:remove(shape_b)
 		-- kill someone maybe		
@@ -132,6 +145,7 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 			game.collider:remove(shape_a)
 		end
 	end
+	
 end
 
 function collision_stop( dt, shape_a, shape_b )
@@ -187,9 +201,22 @@ function shoot()
 end
 
 function updateZombies(dt)
+
 	for i, zombie in ipairs(game.zombies) do
 		if zombie.shape.zombie then
-			--do stuff
+            local dist = game.player.pos:dist(zombie.pos)
+            
+            if dist < 64 then
+                local dir = game.player.pos - zombie.pos
+                dir:normalize_inplace()
+                zombie:move(dir.x*dt*zombie.velocity, dir.y*dt*zombie.velocity)
+                local rot = math.atan2(dir.x, -dir.y)
+        		if rot ~= zombie.rot then
+        			zombie.shape:rotate( rot - zombie.rot )
+        			zombie.rot = rot
+        		end
+        		zombie.anim:update(dt)
+            end
 		else
 			table.remove(game.zombies, i)
 		end
@@ -207,14 +234,15 @@ function updateBullets(dt)
 	end
 end
 
-function drawBullets()
+local function drawBullets()
     for i,v in ipairs(game.projectiles) do
-        love.graphics.circle("fill", v.pos.x,v.pos.y,2,16)
+        love.graphics.circle("fill", v.pos.x, v.pos.y, 1, 16)
     end
 end
 
 local function drawZombies()
 	for i,zombie in ipairs(game.zombies) do
+	    --zombie.shape:draw("fill")
 		zombie.anim:draw( zombie.pos.x, zombie.pos.y, zombie.rot, 0.5, 0.5, 16, 16)
 	end
 end
@@ -238,7 +266,6 @@ function game:draw()
 	--game.player.shape:draw("fill")
 	--love.graphics.draw( game.player.image, game.player.pos.x, game.player.pos.y, game.player.rot, 0.5,0.5, 16, 16 )
 	game.player.anim:draw(game.player.pos.x, game.player.pos.y, game.player.rot, 0.5, 0.5, 16, 16 )
-    
 	drawZombies()
 	drawBullets()
 	game.camera:detach()
