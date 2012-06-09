@@ -3,6 +3,7 @@ tileSetProperties = nil
 Animations_legacy_support = nil
 
 require "libs.AnAL"
+require "libs.slam"
 local game = Gamestate.new()
 
 game.player = { }
@@ -20,8 +21,10 @@ game.loader.path = "maps/"
 game.map = game.loader.load("city.tmx")
 game.layer = game.map.tl["Ground"]
 
+game.sfx = {}
+
 local function findSpawn()
-	return Vector( math.random( 32 * 32 ), math.random( 32*32 ) )
+	return Vector( math.random( 32+ 31 * 32 ), math.random( 32+ 31*32 ) )
 
 end
 
@@ -49,6 +52,9 @@ local function spawnZombie()
 end
 
 function game:init()
+    
+    game.sfx.shoot = love.audio.newSource("assets/sfx/shoot.ogg", "static")
+    
 
 	game.player.pos = Vector ( 32*5, 32*5 )
 	game.player.rot = 0
@@ -65,7 +71,7 @@ function game:init()
 	game.player.anim = newAnimation(game.player.image, 32, 32, 0.1, 3)
 	game.projectiles = {}
 
-	for i = 1 , 50 do
+	for i = 1 , 100 do
 		spawnZombie()
 	end
 end
@@ -181,6 +187,9 @@ function movement(dt)
 
 	local newX = game.player.pos.x + dir.x * dt * 50
 	local newY = game.player.pos.y + dir.y * dt * 50
+	if newX < 32 or newX > 32*32 or newY <32 or newY > 32*32 then
+	    return
+    end
 	game.player:moveTo( newX, newY )
 end
 
@@ -190,7 +199,13 @@ function game:keypressed(key)
     end
 end
 
+local function shootFX()
+    local instance = game.sfx.shoot:play()
+    instance:setPitch(.7 + math.random() * .3) 
+end
+
 function shoot()
+    shootFX()
     local bullet = {}
     bullet.pos = Vector(game.player.pos.x, game.player.pos.y)
     bullet.dir = Vector(math.cos(game.player.rot-math.pi/2), math.sin(game.player.rot-math.pi/2))
