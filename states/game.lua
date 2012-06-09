@@ -5,6 +5,13 @@ game.player = { }
 camMaxDist = 50
 
 game.objects = {}
+TILED_LOADER_PATH = nil
+tileSetProperties = nil
+game.loader = require("libs.AdvTiledLoader.Loader")
+game.loader.path = "maps/"
+game.map = game.loader.load("city.tmx")
+game.layer = game.map.tl["Ground"]
+
 
 function game:init()
 	game.player.pos = Vector ( 100, 100 )
@@ -12,7 +19,7 @@ function game:init()
 
 	game.player.image = love.graphics.newImage( "assets/graphics/dummy.png" )
 
-	game.camera = Camera( 100, 100 )
+	game.camera = Camera( 100, 100, 2 )
 
 	game.collider = HC( 100, on_collision, collision_stop )
 	game.player.shape = game.collider:addRectangle( game.player.pos.x, game.player.pos.y, 40, 15 )
@@ -118,11 +125,12 @@ end
 
 function game:draw()
 	game.camera:attach()
-	
+	local ftx, fty = math.floor(game.player.pos.x), math.floor(game.player.pos.y)
+	game.map:draw()
 	love.graphics.rectangle( "fill", 50, 50, 20, 20 )
 	
-	game.player.shape:draw("fill")
-	love.graphics.draw( game.player.image, game.player.pos.x, game.player.pos.y, game.player.rot, 1, 1, 25, 10 )
+	--game.player.shape:draw("fill")
+	love.graphics.draw( game.player.image, game.player.pos.x, game.player.pos.y, game.player.rot, 0.5,0.5, 25, 10 )
     drawBullets()
 	game.camera:detach()
 end
