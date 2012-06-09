@@ -10,6 +10,8 @@ states = {}
 
 function love.load()
 	states.game = require "states.game"
+	
+	states.fuckup = require "states.hello"
 
 	Gamestate.registerEvents()
 	Gamestate.switch(states.game)
