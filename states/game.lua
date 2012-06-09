@@ -23,6 +23,7 @@ game.layer = game.map.tl["Ground"]
 
 game.sfx = {}
 
+
 local function findSpawn()
 	return Vector( math.random( 32+ 31 * 32 ), math.random( 32+ 31*32 ) )
 
@@ -52,7 +53,7 @@ local function spawnZombie()
 end
 
 function game:init()
-    
+    game.blood = {}
     game.sfx.shoot = love.audio.newSource("assets/sfx/shoot.ogg", "static")
     
 
@@ -74,6 +75,19 @@ function game:init()
 	for i = 1 , 100 do
 		spawnZombie()
 	end
+end
+
+function addBlood(mx,my)
+    for i=1,math.random(100) do
+        table.insert(game.blood, {x = mx+(2*math.random()-1)*5, y = my+5*(2*math.random()-1)})
+    end
+end
+
+function drawBlood()
+    for i,v in ipairs(game.blood) do
+        love.graphics.setColor(255,0,0,255)
+        love.graphics.point(v.x, v.y)
+    end
 end
 
 function game:findSolidTiles(map)
@@ -140,6 +154,8 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 		if shape_b.zombie then
 			shape_b.zombie = false
 			game.collider:remove(shape_b)
+			local x,y = shape_a:center()
+			addBlood(x,y)
 		end
 	elseif shape_b.bullet and shape_a ~= game.player.shape then
 		print( "bang2" )
@@ -149,6 +165,8 @@ function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 		if shape_a.zombie then
 			shape_a.zombie = false
 			game.collider:remove(shape_a)
+			local x,y = shape_b:center()
+			addBlood(x,y)
 		end
 	end
 	
@@ -283,6 +301,7 @@ function game:draw()
 	game.player.anim:draw(game.player.pos.x, game.player.pos.y, game.player.rot, 0.5, 0.5, 16, 16 )
 	drawZombies()
 	drawBullets()
+	drawBlood()
 	game.camera:detach()
 	love.graphics.setBlendMode("multiplicative")
 	
