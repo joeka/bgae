@@ -43,7 +43,7 @@ function game:init()
 
 	game.player.pos = Vector ( 32*5, 32*5 )
 	game.player.rot = 0
-
+    game.fg = love.graphics.newImage("assets/graphics/fg2.png")
 	game.player.image = love.graphics.newImage( "assets/graphics/animation.png" )
 	zombieImage = love.graphics.newImage( "assets/graphics/zombie.png" )
     
@@ -243,6 +243,13 @@ function game:draw()
 	drawZombies()
 	drawBullets()
 	game.camera:detach()
+	love.graphics.setBlendMode("multiplicative")
+	
+    local x,y = game.camera:cameraCoords(game.player.pos.x, game.player.pos.y)
+    love.graphics.setColor(255,255,255,200)
+	love.graphics.draw(game.fg, x,y, 0,1,1,512,512)
+
+	love.graphics.setBlendMode("alpha")
 end
 
 return game
