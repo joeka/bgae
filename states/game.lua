@@ -28,8 +28,7 @@ function game:init()
 	game.collider = HC( 100, on_collision, collision_stop )
 	game.player.shape = game.collider:addRectangle( game.player.pos.x, game.player.pos.y, 32, 32 )
 	game.player.anim = newAnimation(game.player.image, 32, 32, 0.1, 3)
-	game.objects.rect1 = game.collider:addRectangle( 50, 50, 20, 20 )
-	
+	game.objects.rect1 = game.collider:addRectangle( 50, 50, 20, 20 )	
 
 	game.projectiles = {}
 end
