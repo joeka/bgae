@@ -2,6 +2,8 @@ TILED_LOADER_PATH = nil
 tileSetProperties = nil
 Animations_legacy_support = nil
 
+Timer = require "libs.hump.timer"
+
 require "libs.AnAL"
 require "libs.slam"
 local game = Gamestate.new()
@@ -15,6 +17,8 @@ local camMaxDist = 10
 local fancyOption = 3
 
 local killCount = 0
+
+local spawnTime = 45
 
 game.objects = {}
 
@@ -53,6 +57,13 @@ local function spawnZombie()
 	table.insert( game.zombies, zombie )
 end
 
+function spawnTimer()
+	spawnZombie()
+
+	spawnTime = spawnTime - 5
+	Timer.add(spawnTime, spawnTimer )
+end
+
 function game:init()
     game.redScreen = 0
     game.blood = {}
@@ -79,6 +90,8 @@ function game:init()
 	for i = 1 , 100 do
 		spawnZombie()
 	end
+
+	Timer.add(spawnTime, spawnTimer )
 end
 
 function addBlood(mx,my)
@@ -141,6 +154,8 @@ function game:update(dt)
 	updateBullets(dt)
 	updateZombies(dt)
 	game.collider:update(dt)
+
+	Timer.update(dt)
 end
 
 function updateRedScreen(dt)
