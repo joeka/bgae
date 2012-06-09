@@ -22,7 +22,6 @@ game.layer = game.map.tl["Ground"]
 
 local function findSpawn()
 	return Vector( math.random( 32 * 32 ), math.random( 32*32 ) )
-
 end
 
 local function spawnZombie()
@@ -49,9 +48,11 @@ local function spawnZombie()
 end
 
 function game:init()
-
 	game.player.pos = Vector ( 32*5, 32*5 )
 	game.player.rot = 0
+
+	game.player.hp = 100
+
     game.fg = love.graphics.newImage("assets/graphics/fg2.png")
 	game.player.image = love.graphics.newImage( "assets/graphics/animation.png" )
 	zombieImage = love.graphics.newImage( "assets/graphics/zombie.png" )
@@ -119,12 +120,31 @@ function game:update(dt)
 	game.collider:update(dt)
 end
 
+function hit ( mtv_x, mtv_y )
+	local dir = Vector( mtv_x, mtv_y):normalize_inplace()
+	game.player:move( dir.x * 10, dir.y * 10 )
+
+	game.player.hp = game.player.hp - 51
+	if game.player.hp <= 0 then
+		game.player.hp = 0
+		Gamestate.switch( states.fuckup )
+	end
+end
+
 function on_collision( dt, shape_a, shape_b, mtv_x, mtv_y )
 	if shape_a == game.player.shape then
-		game.player:move( mtv_x, mtv_y )
+		if shape_b.zombie then
+			hit( mtv_x, mtv_y )
+		else
+			game.player:move( mtv_x, mtv_y )
+		end
 	end
 	if shape_a.zombie then
-	    shape_a.zombie:move( mtv_x, mtv_y )
+		if shape_b == game.player.shape then
+			hit( -mtv_x, -mtv_y )
+		else
+	    	shape_a.zombie:move( mtv_x, mtv_y )
+		end
     end
 	if shape_a.bullet and shape_b ~= game.player.shape then
 	    print( "bang1" )
@@ -258,7 +278,16 @@ function smoothFollow(dt)
 	end
 end
 
+local function drawGUI()
+	love.graphics.setColor(255,255,255,200)
+	love.graphics.rectangle( "fill", 600, 10, 104, 14 )
+	love.graphics.setColor(255,0,0,200)
+	love.graphics.rectangle( "fill", 602, 12, game.player.hp, 10 )
+end
+
 function game:draw()
+	love.graphics.setColor(255,255,255,255)
+	
 	game.camera:attach()
 	local ftx, fty = math.floor(game.player.pos.x), math.floor(game.player.pos.y)
 	game.map:draw()
@@ -276,6 +305,9 @@ function game:draw()
 	love.graphics.draw(game.fg, x,y, 0,1,1,512,512)
 
 	love.graphics.setBlendMode("alpha")
+
+	drawGUI()
 end
+
 
 return game
